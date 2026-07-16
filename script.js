@@ -96,3 +96,107 @@ document.addEventListener("DOMContentLoaded", () => {
     popup.style.justifyContent = "center";
     popup.style.alignItems = "center";
     popup.style.zIndex = "9999";
+
+
+    const windowBox = document.getElementById("theme-window");
+    const buttons = windowBox.querySelectorAll("button");
+    
+    buttons.forEach(button => {
+        button.style.padding = "12px";
+        button.style.fontSize = "18px";
+        button.style.cursor = "pointer";
+        button.style.border = "none";
+        button.style.borderRadius = "10px";
+        button.style.width = "220px";
+    });
+
+    windowBox.style.background = "#202020";
+    windowBox.style.color = "white";
+    windowBox.style.padding = "30px";
+    windowBox.style.borderRadius = "20px";
+    windowBox.style.display = "flex";
+    windowBox.style.flexDirection = "column";
+    windowBox.style.alignItems = "center";
+    windowBox.style.gap = "20px";
+    windowBox.style.width = "850px";
+    windowBox.style.maxWidth = "90%";
+
+    // ========================================================= 
+    // ОБРОБКА КЛІКІВ ПО КНОПКАХ
+    // Прописуємо, що робити, коли натискають кнопки меню і теми
+    // ========================================================= 
+    if(configButton) {
+        configButton.addEventListener("click", () => {
+            popup.style.display = "flex";
+        });
+    }
+
+    document.getElementById("close-theme-btn").addEventListener("click", () => {
+        popup.style.display = "none";
+    });
+
+    document.getElementById("light-theme-btn").addEventListener("click", () => {
+        document.body.classList.add("light-theme");
+        localStorage.setItem("theme", "light");
+        popup.style.display = "none";
+    });
+
+    document.getElementById("dark-theme-btn").addEventListener("click", () => {
+        document.body.classList.remove("light-theme");
+        localStorage.setItem("theme", "dark");
+        popup.style.display = "none";
+    });
+
+    // ========================================================= 
+    // РОБОТА ЕКРАНУ ЗАВАНТАЖЕННЯ ТА АУДІО
+    // Керуємо стартовою заставкою та звуками при вході
+    // ========================================================= 
+    const loader = document.getElementById("loader");
+    const intro = document.getElementById("introAudio");
+    const introEnabled = localStorage.getItem("introEnabled") !== "false";
+    const introAlreadyShown = sessionStorage.getItem("introShown");
+
+    if (loader) {
+        if (introEnabled && !introAlreadyShown) {
+            
+            loader.addEventListener("click", () => {
+                loader.classList.add("hide");
+                sessionStorage.setItem("introShown", "true");
+                setTimeout(() => {
+                    if(intro) intro.play().catch(e => console.log(e));
+                }, 20); 
+            }, { once:true }); 
+        } else {
+            
+            loader.classList.add("hide");
+            if(localStorage.getItem("musicEnabled") !== "false" && bg){
+                bg.play().catch(e => console.log(e));
+            }
+        }
+    }
+
+    // Коли інтро закінчується — починає грати фонова музика
+    if (intro) {
+        intro.addEventListener("ended", () => {
+            if(localStorage.getItem("musicEnabled") !== "false" && bg){
+                bg.play().catch(e => console.log(e));
+            }
+        });
+    }
+
+    // =========================================================
+    // ЗАВАНТАЖЕННЯ КАРТИН З API
+    // Оптимізовано: збільшений limit, рандомний skip,
+    // і ми заборонили кешування для отримання свіжих картин щоразу
+    // =========================================================
+    const galleryContainer = document.querySelector('.image-gallery-top');
+
+    async function fetchArtworks() {
+        if (!galleryContainer) return;
+
+        // --- Показуємо скелетон поки чекаємо ---
+        showSkeletons();
+
+        try {
+            // Рандомний offset для різноманітності картин
+            const skip = Math.floor(Math.random() * 2000);
